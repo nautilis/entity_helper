@@ -71,7 +71,7 @@ func getJavaType(sqlType string) string {
 
 func getJavaCode(table string, fT map[string]string, fC map[string]string, sql string) string {
 	var code string
-	code += "public class " + table + " {\n"
+	code += "public class " + table + "VO" + " {\n"
 	for key, value := range fT {
 		code += "    // " + fC[key] + "\n"
 		code += "    private " + value + " " + key + ";\n"
@@ -105,6 +105,8 @@ func Generate(sql string) string {
 	fieldType := make(map[string]string)
 	fieldRe := "^\"\\w+\""
 	for _, ele := range fieldsList {
+		ele = strings.Trim(ele, "\r\n")
+		ele = strings.Trim(ele, "\n")
 		ele = strings.Trim(ele, " ")
 		fmt.Println(ele)
 		if matched, _ := regexp.MatchString(fieldRe, ele); !matched {
