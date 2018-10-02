@@ -15,38 +15,22 @@ type AutoEntity struct {
 }
 
 func underLine2Camel(field string, isTableName bool) string {
-	s := field
-	point := 0
-	index := 0
-	length := len(s)
-	var points []int
-	for index != -1 {
-		index = strings.Index(s, "_")
-		point += index
-		points = append(points, point)
-		//fmt.Printf("string<==>point<==>index<==>%s, %d, %d\n", s, point, index)
-		if point == length-1 {
-			break
-		}
-		s = s[index+1:]
-		point += 1
-	}
-	//fmt.Println(points)
+	re := regexp.MustCompile("_")
+	points := re.FindAllStringIndex(field, -1)
+	fmt.Printf("string ==> %s, ponits ==>%v\n", field, points)
+	length := len(field)
 	characters := strings.Split(field, "")
-	for _, element := range points {
-		if element != length-1 && element != -1 {
-			characters[element+1] = strings.ToUpper(characters[element+1])
-			//fmt.Println(characters[element+1])
+	for _, point := range points {
+		if point[1] != length {
+			characters[point[1]] = strings.ToUpper(characters[point[1]])
 		}
 	}
 	if isTableName {
 		characters[0] = strings.ToUpper(characters[0])
 	}
-	s = strings.Join(characters, "")
-	s = strings.Replace(s, "_", "", -1)
-	//fmt.Println(s)
-	return s
-
+	res := strings.Join(characters, "")
+	res = strings.Replace(res, "_", "", -1)
+	return res
 }
 
 func getJavaType(sqlType string) string {
