@@ -71,6 +71,7 @@ func getJavaType(sqlType string) string {
 
 func getJavaCode(table string, fT map[string]string, fC map[string]string, sql string) string {
 	var code string
+	code += "@Getter\r\n@Setter\r\n"
 	code += "public class " + table + "VO" + " {\n"
 	for key, value := range fT {
 		code += "    // " + fC[key] + "\n"
@@ -90,53 +91,30 @@ func Generate(sql string) string {
 	tnre := regexp.MustCompile("\"\\w+\"\\.\"(?P<Table>\\w+)\"\\ *\\(")
 	matchs := tnre.FindStringSubmatch(sql)
 	tableName := underLine2Camel(matchs[1], true)
-	fmt.Printf("table name is %s\n", tableName)
 
-	//"timestamp" varchar(12) COLLATE "default" NOT NULL,
-	braceIndex := strings.Index(sql, "(")
-	fmt.Println("braceIndex is %s \n", braceIndex)
-	subSql := sql[braceIndex+2:]
-	subList := strings.Split(subSql, ",\r\n")
-	fieldsList := subList[:len(subList)-1]
-	comment := subList[len(subList)-1]
-	fmt.Printf("subSql <==> fieldsList <===> comment %s\n<====>%v\n <===> %s\n", subSql, fieldsList, comment)
-
-	//处理字段
+	lines := strings.Split(sql, "\r\n")
 	fieldType := make(map[string]string)
 	fieldRe := "^\"\\w+\""
-	for _, ele := range fieldsList {
-		ele = strings.Trim(ele, "\r\n")
-		ele = strings.Trim(ele, "\n")
-		ele = strings.Trim(ele, " ")
-		fmt.Println(ele)
-		if matched, _ := regexp.MatchString(fieldRe, ele); !matched {
-			continue
-		}
-		eleList := strings.Split(ele, " ")
-		var _type string = getJavaType(eleList[1])
-		eleList[0] = strings.Trim(eleList[0], "\"")
-		fieldType[underLine2Camel(eleList[0], false)] = _type
-	}
-	fmt.Printf("count <==> map, %d <==> %v\n", len(fieldType), fieldType)
-
-	//处理注释
-	comList := strings.Split(comment, ";")
-	//COMMENT ON COLUMN "adempiere"."es_order"."actual_amount" IS '实际金额';
-	comRe := regexp.MustCompile("COMMENT\\ ON\\ COLUMN\\ \"\\w+\"\\.\"\\w+\"\\.\"(?P<column>\\w+)\"\\ IS\\ '(?P<comment>\\S+)'")
 	fieldCom := make(map[string]string)
-	for _, com := range comList {
-		com = strings.Trim(com, " ")
-		fmt.Println(com)
-		matched := comRe.FindStringSubmatch(com)
-		fmt.Println(matched)
-		if len(matched) == 3 {
+	//COMMENT ON COLUMN "adempiere"."lyy_income_sharing_set_log"."pre_rate" IS '收益分成比例  默认 -1 为未设置';
+	comRe := regexp.MustCompile("COMMENT\\ ON\\ COLUMN\\ \"\\w+\"\\.\"\\w+\"\\.\"(?P<column>\\w+)\"\\ IS\\ '(?P<comment>(\\ *\\S+\\ *)+)'")
+	for _, line := range lines {
+		line = strings.Trim(line, "\r\n")
+		line = strings.Trim(line, "\n")
+		line = strings.Trim(line, " ")
+		fmt.Println(line)
+		if matched, _ := regexp.MatchString(fieldRe, line); matched {
+			fieldList := strings.Split(line, " ")
+			var _type string = getJavaType(fieldList[1])
+			var _field string = strings.Trim(fieldList[0], "\"")
+			fieldType[underLine2Camel(_field, false)] = _type
+		} else if matched := comRe.FindStringSubmatch(line); len(matched) >= 3 {
 			fieldCom[underLine2Camel(matched[1], false)] = matched[2]
 		}
 	}
-	fmt.Printf("count <==> map, %d <==> %v \n", len(fieldCom), fieldCom)
+	fmt.Printf("count ==>%d fieldMap ==>%v \n", len(fieldType), fieldType)
+	fmt.Printf("count ==>%d commentMap ==>%v \n", len(fieldCom), fieldCom)
 
-	//拼接java code
 	code := getJavaCode(tableName, fieldType, fieldCom, sql)
 	return code
-
 }
