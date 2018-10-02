@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+type AutoEntity struct {
+	fields    []string
+	fieldType map[string]string
+	fieldCom  map[string]string
+	tableName string
+	sql       string
+}
+
 func underLine2Camel(field string, isTableName bool) string {
 	s := field
 	point := 0
@@ -69,18 +77,18 @@ func getJavaType(sqlType string) string {
 	}
 }
 
-func getJavaCode(table string, fT map[string]string, fC map[string]string, sql string) string {
+func (a *AutoEntity) getJavaCode() string {
 	var code string
 	code += "@Getter\r\n@Setter\r\n"
-	code += "public class " + table + "VO" + " {\n"
-	for key, value := range fT {
-		code += "    // " + fC[key] + "\n"
-		code += "    private " + value + " " + key + ";\n"
+	code += "public class " + a.tableName + "VO" + " {\n"
+	for _, field := range a.fields {
+		code += "    // " + a.fieldCom[field] + "\n"
+		code += "    private " + a.fieldType[field] + " " + field + ";\n"
 		code += "\n"
 	}
 	code += "\n}\n"
 	code += "/**\n"
-	code += sql
+	code += a.sql
 	code += "\n"
 	code += "**/"
 	return code
@@ -92,6 +100,7 @@ func Generate(sql string) string {
 	matchs := tnre.FindStringSubmatch(sql)
 	tableName := underLine2Camel(matchs[1], true)
 
+	var fields []string
 	lines := strings.Split(sql, "\r\n")
 	fieldType := make(map[string]string)
 	fieldRe := "^\"\\w+\""
@@ -107,7 +116,9 @@ func Generate(sql string) string {
 			fieldList := strings.Split(line, " ")
 			var _type string = getJavaType(fieldList[1])
 			var _field string = strings.Trim(fieldList[0], "\"")
-			fieldType[underLine2Camel(_field, false)] = _type
+			_field = underLine2Camel(_field, false)
+			fieldType[_field] = _type
+			fields = append(fields, _field)
 		} else if matched := comRe.FindStringSubmatch(line); len(matched) >= 3 {
 			fieldCom[underLine2Camel(matched[1], false)] = matched[2]
 		}
@@ -115,6 +126,14 @@ func Generate(sql string) string {
 	fmt.Printf("count ==>%d fieldMap ==>%v \n", len(fieldType), fieldType)
 	fmt.Printf("count ==>%d commentMap ==>%v \n", len(fieldCom), fieldCom)
 
-	code := getJavaCode(tableName, fieldType, fieldCom, sql)
+	entity := &AutoEntity{
+		tableName: tableName,
+		fieldType: fieldType,
+		fieldCom:  fieldCom,
+		sql:       sql,
+		fields:    fields,
+	}
+
+	code := entity.getJavaCode()
 	return code
 }
