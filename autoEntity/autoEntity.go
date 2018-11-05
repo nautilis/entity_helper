@@ -78,6 +78,47 @@ func (a *AutoEntity) getJavaCode() string {
 	return code
 }
 
+func getTableName(sql string) string {
+	tnre := regexp.MustCompile("\"\\w+\"\\.\"(?P<Table>\\w+)\"\\ *\\(")
+	matchs := tnre.FindStringSubmatch(sql)
+	tableName := matchs[1]
+	return tableName
+
+}
+
+func getSequence(tableName string) string {
+	var seq string
+	fmt.Println(tableName)
+	seq += "-- seq#=> " + tableName + "\r\n"
+	seq += "DROP SEQUENCE IF EXISTS " + tableName + "_seq CASCADE;\r\n"
+	seq += "CREATE SEQUENCE " + tableName + "_seq\r\n"
+	seq += "INCREMENT 1\r\n"
+	seq += "START 1000000\r\n"
+	seq += "NO MINVALUE\r\n"
+	seq += "NO MAXVALUE\r\n"
+	seq += "CACHE 2;\r\n"
+
+	seq += "alter table " + tableName + " alter column " + tableName + "_id" + " set default nextval('" + tableName + "_seq" + "');\r\n"
+	return seq
+
+}
+
+func GenerateSeq(tableNames []string) string {
+	var seqs []string
+
+	for _, tableName := range tableNames {
+		tableName = strings.Trim(tableName, " ")
+		tableName = strings.Trim(tableName, "\r\n")
+		tableName = strings.Trim(tableName, "\n")
+		mustMatch := "\\w+"
+		if matched, _ := regexp.MatchString(mustMatch, tableName); matched {
+			seq := getSequence(tableName)
+			seqs = append(seqs, seq)
+		}
+	}
+	return strings.Join(seqs, "\r\n")
+}
+
 func Generate(sql string) string {
 	//匹配表名
 	tnre := regexp.MustCompile("\"\\w+\"\\.\"(?P<Table>\\w+)\"\\ *\\(")

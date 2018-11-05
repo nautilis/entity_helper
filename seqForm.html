@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"> 
+<title>sql to sequence </title>
+</head>
+<body>
+<form action="/generateSeq/" method="POST">
+	<p>postgresql sql:</p>
+	<textarea id="tableNames" name="tableNames" rows="30" cols="100" placeholder="输入表名用逗号分隔" > 
+	</textarea>
+	<Input type="submit" value="转成sequence"/>
+</form>
+<script>
+let textarea = document.getElementById("tableNames");
+textarea.focus();
+</script>
+</body>
+</html>

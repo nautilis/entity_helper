@@ -1,6 +1,8 @@
 package autoEntity
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -18,4 +20,11 @@ func TestUnderLine2Camel(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGenerateSeq(t *testing.T) {
+	cases := "lyy_equipment, hello"
+	names := strings.Split(cases, ",")
+	result := GenerateSeq(names)
+	fmt.Println(result)
 }
