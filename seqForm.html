@@ -7,10 +7,11 @@
 <body>
 <form action="/generateSeq/" method="POST">
 	<p>postgresql sql:</p>
-	<textarea id="tableNames" name="tableNames" rows="30" cols="100" placeholder="输入表名用逗号分隔" > 
+	<textarea id="tableNames" name="tableNames" rows="30" cols="100" placeholder="输入表名用逗号分隔"> 
 	</textarea>
 	<Input type="submit" value="转成sequence"/>
 </form>
+<button><a href="/newTask/">跳到VO</a></button>
 <script>
 let textarea = document.getElementById("tableNames");
 textarea.focus();
