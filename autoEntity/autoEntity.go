@@ -121,9 +121,10 @@ func GenerateSeq(tableNames []string) string {
 
 func Generate(sql string) string {
 	//匹配表名
-	tnre := regexp.MustCompile("\"\\w+\"\\.\"(?P<Table>\\w+)\"\\ *\\(")
+	//CREATE\sTABLE\s(\"\w+\"\.)?\"(?P<Table>\w+)\"\s*\(
+	tnre := regexp.MustCompile("CREATE\\sTABLE\\s(\"\\w+\"\\.)?\"(?P<Table>\\w+)\"\\s*\\(")
 	matchs := tnre.FindStringSubmatch(sql)
-	tableName := underLine2Camel(matchs[1], true)
+	tableName := underLine2Camel(matchs[2], true)
 
 	var fields []string
 	lines := strings.Split(sql, "\r\n")
